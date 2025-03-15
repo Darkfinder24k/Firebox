@@ -1,0 +1,12 @@
+streamlit
+ollama
+google-generativeai
+speechrecognition
+pyaudio
+bcrypt
+smtplib
+email
+numpy
+opencv-python
+Pillow
+openpyxl
