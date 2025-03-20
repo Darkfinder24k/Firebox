@@ -26,7 +26,7 @@ class FireboxAI:
         """Refines the response to be more informative, sympathetic, and well-structured."""
         try:
             improved_response = self.model.generate_content(
-                f"Make this response more detailed, sympathetic, and well-structured: {response}"
+                f"Make this response more detailed, sympathetic, and well-structured General, Empathetic & Proactive: {response}"
             )
             return improved_response.text if improved_response else response
         except Exception as e:
