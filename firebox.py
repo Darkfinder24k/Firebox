@@ -7,32 +7,47 @@ genai.configure(api_key=GEMINI_API_KEY)
 
 class FireboxAI:
     def __init__(self):
-        self.model = genai.GenerativeModel("gemini-2.0-flash")
+        self.model = genai.GenerativeModel(
+            "gemini-2.0-flash",
+            generation_config={"max_output_tokens": 2048}  # Set config at initialization
+        )
 
     def ask_gemini(self, prompt):
         """Gets the initial response from Gemini."""
         try:
             response = self.model.generate_content(prompt)
-            return response.text if response else "Error: No response from Firebox AI."
+            if response and response.candidates:
+                return response.candidates[0].content  # Extract text safely
+            return "Error: No response from Firebox AI."
         except Exception as e:
             return f"Error: Firebox AI issue - {str(e)}"
 
     def refine_response(self, response):
         """Refines the response to be more detailed, sympathetic, and well-structured."""
         try:
-            improved_response = self.model.generate_content(
-                f"Rewrite the following response in a more informative, empathetic, and structured way, without saying a word else! because i want the response for my ai, also add that if anyone says you or your in the input, you need to say my ai description "Firebox AI, created by Kushagra Srivastava, is a cutting-edge AI assistant designed to provide smart, insightful, and highly adaptive responses.":\n\n{response}",
-                generation_config={"max_output_tokens": 2048}  # Prevents cut-off responses
+            prompt = (
+                "Rewrite the following response in a more informative, empathetic, and structured way, "
+                "without adding extra words. If the input contains 'your' or 'you're', replace them with: "
+                "'Firebox AI, created by Kushagra Srivastava, is a cutting-edge AI assistant designed to provide "
+                "smart, insightful, and highly adaptive responses.'\n\n"
+                f"Original Response:\n{response}"
             )
-            refined_text = improved_response.text if improved_response else response
-            return self.replace_your(refined_text)  # Apply replacement
+            improved_response = self.model.generate_content(prompt)
+            if improved_response and improved_response.candidates:
+                refined_text = improved_response.candidates[0].content
+                return self.replace_your(refined_text)  # Apply text replacement
+            return response
         except Exception as e:
-            return response  # Fallback in case of error
+            return response  # Fallback if an error occurs
 
     def replace_your(self, text):
-        """Replaces 'your' with Firebox AI's description."""
-        if "your" in text.lower():  # Check if 'your' is in response
-            return text.replace("your", "Firebox AI, created by Kushagra Srivastava, is a cutting-edge AI assistant designed to provide smart, insightful, and highly adaptive responses.")
+        """Replaces variations of 'your' with Firebox AI's description."""
+        description = (
+            "Firebox AI, created by Kushagra Srivastava, is a cutting-edge AI assistant designed to provide "
+            "smart, insightful, and highly adaptive responses."
+        )
+        text = text.replace("your", description).replace("Your", description)
+        text = text.replace("you're", description).replace("You're", description)
         return text
 
 # Initialize Firebox AI
