@@ -12,17 +12,19 @@ else:
     st.error("Missing Gemini API Key. Set it as an environment variable.")
 
 class AIModels:
-    def __init__(self, ollama_model="llama3.2"):  # Change "llama3" to "llama3.2"
+    def __init__(self, ollama_model="llama3.2"):
         self.ollama_model = ollama_model
+        self.ollama_url = "http://localhost:11434/api/generate"  # Define the Ollama API URL
 
     def ask_ollama(self, prompt):
         payload = {"model": self.ollama_model, "prompt": prompt, "stream": False}
         try:
-            response = requests.post(self.ollama_url, json=payload)
+            response = requests.post(self.ollama_url, json=payload)  # Now it knows the URL
             response.raise_for_status()
             return response.json().get("response", "Error: No response from Ollama API.")
         except requests.exceptions.RequestException as e:
             return f"Error: Ollama API issue - {str(e)}"
+
 
     def ask_gemini(self, prompt):
         try:
