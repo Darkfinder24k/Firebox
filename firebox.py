@@ -13,31 +13,25 @@ class FireboxAI:
         )
 
     def ask_gemini(self, prompt):
-    """Gets the initial response from Gemini and extracts only the text."""
-    try:
-        response = self.model.generate_content(prompt)
-        if response and hasattr(response, "candidates"):  # Check if candidates exist
-            return response.candidates[0].content  # Extract text properly
-        return "Error: No response from Firebox AI."
-    except Exception as e:
-        return f"Error: Firebox AI issue - {str(e)}"
-
+        """Gets the initial response from Gemini and extracts only the text."""
+        try:
+            response = self.model.generate_content(prompt)
+            return response.text if response else "Error: No response from Firebox AI."
+        except Exception as e:
+            return f"Error: Firebox AI issue - {str(e)}"
 
     def refine_response(self, response):
         """Refines the response to be more detailed, sympathetic, and well-structured."""
         try:
             prompt = (
-                "Rewrite the following response in a more informative, empathetic, and structured way, "
-                "without adding extra words. If the input contains 'your' or 'you're', replace them with: "
+                "Rewrite the following response in a more informative, empathetic, and structured way. "
+                "If the input contains 'your' or 'you're', replace them with: "
                 "'Firebox AI, created by Kushagra Srivastava, is a cutting-edge AI assistant designed to provide "
                 "smart, insightful, and highly adaptive responses.'\n\n"
                 f"Original Response:\n{response}"
             )
             improved_response = self.model.generate_content(prompt)
-            if improved_response and improved_response.candidates:
-                refined_text = improved_response.candidates[0].content
-                return self.replace_your(refined_text)  # Apply text replacement
-            return response
+            return self.replace_your(improved_response.text) if improved_response else response
         except Exception as e:
             return response  # Fallback if an error occurs
 
