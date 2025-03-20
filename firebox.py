@@ -16,11 +16,12 @@ class FireboxAI:
     """Gets the initial response from Gemini and extracts only the text."""
     try:
         response = self.model.generate_content(prompt)
-        if response and response.candidates:
-            return response.candidates[0].content  # Extracts text properly
+        if response and hasattr(response, "candidates"):  # Check if candidates exist
+            return response.candidates[0].content  # Extract text properly
         return "Error: No response from Firebox AI."
     except Exception as e:
         return f"Error: Firebox AI issue - {str(e)}"
+
 
     def refine_response(self, response):
         """Refines the response to be more detailed, sympathetic, and well-structured."""
