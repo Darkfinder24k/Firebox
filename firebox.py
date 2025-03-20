@@ -13,14 +13,14 @@ class FireboxAI:
         )
 
     def ask_gemini(self, prompt):
-        """Gets the initial response from Gemini."""
-        try:
-            response = self.model.generate_content(prompt)
-            if response and response.candidates:
-                return response.candidates[0].content  # Extract text safely
-            return "Error: No response from Firebox AI."
-        except Exception as e:
-            return f"Error: Firebox AI issue - {str(e)}"
+    """Gets the initial response from Gemini and extracts only the text."""
+    try:
+        response = self.model.generate_content(prompt)
+        if response and response.candidates:
+            return response.candidates[0].content  # Extracts text properly
+        return "Error: No response from Firebox AI."
+    except Exception as e:
+        return f"Error: Firebox AI issue - {str(e)}"
 
     def refine_response(self, response):
         """Refines the response to be more detailed, sympathetic, and well-structured."""
