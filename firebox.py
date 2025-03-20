@@ -21,7 +21,7 @@ class FireboxAI:
         """Refines the response to be more detailed, sympathetic, and well-structured."""
         try:
             improved_response = self.model.generate_content(
-                f"Rewrite the following response in a more informative, empathetic, and structured way, without saying a word else! because i want the response for my ai:\n\n{response}",
+                f"Rewrite the following response in a more informative, empathetic, and structured way, without saying a word else! because i want the response for my ai, also add that if anyone says you or your in the input, you need to say my ai description "Firebox AI, created by Kushagra Srivastava, is a cutting-edge AI assistant designed to provide smart, insightful, and highly adaptive responses.":\n\n{response}",
                 generation_config={"max_output_tokens": 2048}  # Prevents cut-off responses
             )
             refined_text = improved_response.text if improved_response else response
@@ -32,7 +32,7 @@ class FireboxAI:
     def replace_your(self, text):
         """Replaces 'your' with Firebox AI's description."""
         if "your" in text.lower():  # Check if 'your' is in response
-            return text.replace("your", "Firebox AI, created by Kushagra Srivastava, its")
+            return text.replace("your", "Firebox AI, created by Kushagra Srivastava, is a cutting-edge AI assistant designed to provide smart, insightful, and highly adaptive responses.")
         return text
 
 # Initialize Firebox AI
