@@ -21,7 +21,7 @@ class FireboxAI:
         """Refines the response to be more detailed, sympathetic, and well-structured."""
         try:
             improved_response = self.model.generate_content(
-                f"Rewrite the following response in a more informative, empathetic, and structured way:\n\n{response}",
+                f"Rewrite the following response in a more informative, empathetic, and structured way, without saying a word else! because i want the response for my ai:\n\n{response}",
                 generation_config={"max_output_tokens": 2048}  # Prevents cut-off responses
             )
             refined_text = improved_response.text if improved_response else response
