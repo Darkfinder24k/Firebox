@@ -1,14 +1,9 @@
 import streamlit as st
 import google.generativeai as genai
 
-# Set API key (directly, without os)
-GEMINI_API_KEY = "AIzaSyD9hmqBaXvZqAUxQ3mnejzM_EwPMeZQod4"  # Replace with your actual API key
-
-# Configure Gemini API
-if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
-else:
-    st.error("Missing Gemini API Key. Set it as an environment variable.")
+# Set API key
+GEMINI_API_KEY = "AIzaSyD9hmqBaXvZqAUxQ3mnejzM_EwPMeZQod4"
+genai.configure(api_key=GEMINI_API_KEY)
 
 class FireboxAI:
     def __init__(self):
@@ -23,56 +18,49 @@ class FireboxAI:
             return f"Error: Firebox AI issue - {str(e)}"
 
     def refine_response(self, response):
-        """Refines the response to be more informative, sympathetic, and well-structured."""
+        """Refines the response to be more detailed, sympathetic, and well-structured."""
         try:
             improved_response = self.model.generate_content(
-                f"Make this response more detailed, sympathetic, and well-structured General, Empathetic & Proactive, General and Empathetic, without saying anything else, other than the response: {response}"
+                f"Rewrite the following response in a more informative, empathetic, and structured way:\n\n{response}",
+                generation_config={"max_output_tokens": 2048}  # Prevents cut-off responses
             )
-            return improved_response.text if improved_response else response
+            refined_text = improved_response.text if improved_response else response
+            return self.replace_your(refined_text)  # Apply replacement
         except Exception as e:
-            return response  # If refining fails, return the original response
+            return response  # Fallback in case of error
+
+    def replace_your(self, text):
+        """Replaces 'your' with Firebox AI's description."""
+        if "your" in text.lower():  # Check if 'your' is in response
+            return text.replace("your", "Firebox AI, created by Kushagra Srivastava, its")
+        return text
 
 # Initialize Firebox AI
 ai = FireboxAI()
 
-# Streamlit UI Layout
+# Streamlit UI
 st.set_page_config(page_title="Firebox AI", layout="wide")
-
-# Sidebar with navigation
 st.sidebar.title("🔥 Firebox AI")
-st.sidebar.markdown("Navigate through the sections:")
-st.sidebar.button("Home")
-st.sidebar.button("Settings")
-st.sidebar.button("About Firebox")
-
-# Title
 st.title("Firebox AI Assistant")
 
-# Chat history (Session State)
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Display chat history
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# Bottom Search Bar (Chat Input)
 query = st.chat_input("Ask Firebox AI...")
 
 if query:
     with st.chat_message("user"):
         st.markdown(query)
 
-    # Step 1: Get the initial response
     initial_response = ai.ask_gemini(query)
-
-    # Step 2: Refine the response
     firebox_response = ai.refine_response(initial_response)
 
     with st.chat_message("assistant"):
         st.markdown(firebox_response)
 
-    # Save conversation
     st.session_state.messages.append({"role": "user", "content": query})
     st.session_state.messages.append({"role": "assistant", "content": firebox_response})
