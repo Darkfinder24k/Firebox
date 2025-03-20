@@ -12,8 +12,7 @@ else:
     st.error("Missing Gemini API Key. Set it as an environment variable.")
 
 class AIModels:
-    def __init__(self, ollama_model="llama3"):
-        self.ollama_url = "http://localhost:11434/api/generate"
+    def __init__(self, ollama_model="llama3.2"):  # Change "llama3" to "llama3.2"
         self.ollama_model = ollama_model
 
     def ask_ollama(self, prompt):
