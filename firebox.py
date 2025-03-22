@@ -1,7 +1,7 @@
 import streamlit as st
 import google.generativeai as genai
 
-# Secure API Key Handling
+# Secure API Key Handling using secrets.toml
 GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
 genai.configure(api_key=GEMINI_API_KEY)
 
@@ -47,10 +47,8 @@ ai = FireboxAI()
 
 # Streamlit UI
 st.set_page_config(page_title="Firebox AI", layout="wide")
-st.sidebar.title("🔥 Firebox AI")
-st.title("Firebox AI Assistant")
 
-# Add the CSS to hide the header and footer
+# Add the CSS to hide the header and footer IMMEDIATELY after set_page_config
 st.markdown(
     """
     <style>
@@ -64,6 +62,9 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
+st.sidebar.title("🔥 Firebox AI")
+st.title("Firebox AI Assistant")
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
