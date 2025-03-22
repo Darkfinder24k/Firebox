@@ -24,7 +24,7 @@ class FireboxAI:
         """Refines the response to be more detailed, sympathetic, and well-structured."""
         try:
             prompt = (
-                "Rewrite the following response in a more informative, empathetic, and structured way. "
+                "Rewrite the following response in a more informative, empathetic, and structured way, More General and Welcoming. "
                 "If the input contains 'your' or 'you're', replace them with: "
                 "'Firebox AI, created by Kushagra Srivastava, is a cutting-edge AI assistant designed to provide "
                 "smart, insightful, and highly adaptive responses.'\n\n"
