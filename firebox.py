@@ -48,7 +48,7 @@ ai = FireboxAI()
 # Streamlit UI
 st.set_page_config(page_title="Firebox AI", layout="wide")
 
-# Add the CSS to hide the header and footer IMMEDIATELY after set_page_config
+# Updated CSS to hide the footer
 st.markdown(
     """
     <style>
@@ -57,6 +57,9 @@ st.markdown(
         header {visibility: hidden;}
         .viewerBadge_container__1QSob, .viewerBadge_link__1S1BI, .viewerBadge_button__13la3 {
             display: none; 
+        }
+        .css-1y4p8pa {
+            display: none;
         }
     </style>
     """,
