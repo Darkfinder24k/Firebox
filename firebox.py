@@ -2,7 +2,7 @@ import streamlit as st
 import google.generativeai as genai
 
 # Secure API Key Handling using secrets.toml
-GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
+GEMINI_API_KEY = "AIzaSyD9hmqBaXvZqAUxQ3mnejzM_EwPMeZQod4"
 genai.configure(api_key=GEMINI_API_KEY)
 
 class FireboxAI:
