@@ -144,8 +144,8 @@ search_bar_html = """
 """
 
 def handle_message(message):
-    if message.get('type') == 'file_upload':
-        try:
+    try:
+        if message.get('type') == 'file_upload':
             image_data = message['data'].split(',')[1]
             image_bytes = base64.b64decode(image_data)
             image = Image.open(io.BytesIO(image_bytes))
@@ -155,12 +155,8 @@ def handle_message(message):
                 st.markdown(file_result)
 
             with st.spinner("Generating response..."):
-                try:
-                    initial_response = ai.ask_gemini(file_result)
-                    firebox_response = ai.refine_response(initial_response) if refine_response_enabled else initial_response
-                except Exception as e:
-                    st.error(f"Error generating response: {e}")
-                    firebox_response = "An error occurred generating the response."
+                initial_response = ai.ask_gemini(file_result)
+                firebox_response = ai.refine_response(initial_response) if refine_response_enabled else initial_response
 
             with st.chat_message("assistant"):
                 st.markdown(firebox_response)
@@ -168,28 +164,25 @@ def handle_message(message):
             st.session_state.messages.append({"role": "user", "content": file_result})
             st.session_state.messages.append({"role": "assistant", "content": firebox_response})
 
-        except Exception as e:
-            st.error(f"Error processing uploaded image: {e}")
+        elif message.get('type') == 'text_input':
+            query = message['query']
+            if query:
+                with st.chat_message("user"):
+                    st.markdown(query)
 
-    elif message.get('type') == 'text_input':
-        query = message['query']
-        if query:
-            with st.chat_message("user"):
-                st.markdown(query)
-
-            with st.spinner("Generating response..."):
-                try:
+                with st.spinner("Generating response..."):
                     initial_response = ai.ask_gemini(query)
                     firebox_response = ai.refine_response(initial_response) if refine_response_enabled else initial_response
-                except Exception as e:
-                    st.error(f"Error generating response: {e}")
-                    firebox_response = "An error occurred generating the response."
 
-            with st.chat_message("assistant"):
-                st.markdown(firebox_response)
+                with st.chat_message("assistant"):
+                    st.markdown(firebox_response)
 
-            st.session_state.messages.append({"role": "user", "content": query})
-            st.session_state.messages.append({"role": "assistant", "content": firebox_response})
+                st.session_state.messages.append({"role": "user", "content": query})
+                st.session_state.messages.append({"role": "assistant", "content": firebox_response})
+        else:
+            print(f"Received unknown message: {message}")
+    except Exception as e:
+        st.error(f"Error processing message: {e}")
 
 st.components.v1.html(search_bar_html, height=50, on_message=handle_message)
 
