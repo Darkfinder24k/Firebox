@@ -71,6 +71,27 @@ st.markdown(
         .css-1y4p8pa {
             display: none !important;
         }
+
+        .search-bar-container {
+            display: flex;
+            align-items: center;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 4px;
+        }
+
+        .search-input {
+            flex-grow: 1;
+            padding: 8px;
+            border: none;
+        }
+
+        .plus-button {
+            cursor: pointer;
+            padding: 8px;
+            border: none;
+            background-color: transparent;
+        }
     </style>
     """,
     unsafe_allow_html=True,
@@ -84,62 +105,114 @@ if "messages" not in st.session_state:
 
 refine_response_enabled = st.sidebar.checkbox("Refine Response", value=True)
 
-# Plus Button and File Upload Logic
-if "show_file_upload" not in st.session_state:
-    st.session_state.show_file_upload = False
+# Custom Search Bar with Plus Button
+search_bar_html = """
+<div class="search-bar-container">
+    <input type="text" class="search-input" id="search-input" placeholder="Ask Firebox AI...">
+    <button class="plus-button" id="plus-button">+</button>
+    <input type="file" id="file-input" style="display: none;" accept="image/*">
+</div>
 
-def toggle_file_upload():
-    st.session_state.show_file_upload = not st.session_state.show_file_upload
+<script>
+    const plusButton = document.getElementById("plus-button");
+    const fileInput = document.getElementById("file-input");
+    const searchInput = document.getElementById("search-input");
 
-plus_button = st.button("+", on_click=toggle_file_upload)
+    plusButton.addEventListener("click", () => {
+        fileInput.click();
+    });
 
-if st.session_state.show_file_upload:
-    uploaded_file = st.file_uploader("Upload file", type=["png", "jpg", "jpeg"])
-    if uploaded_file:
-        file_type = uploaded_file.type
-        if "image" in file_type:
-            file_result = process_image(uploaded_file)
-        else:
-            file_result = "Unsupported file type"
+    fileInput.addEventListener("change", (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const base64Image = e.target.result;
+                window.parent.postMessage({ type: "file_upload", data: base64Image }, "*");
+            };
+            reader.readAsDataURL(file);
+        }
+    });
 
-        with st.chat_message("user"):
-            st.markdown(file_result)
+    searchInput.addEventListener("change", (event)=>{
+        const query = event.target.value;
+        window.parent.postMessage({ type: "text_input", query: query }, "*");
+    })
 
-        with st.spinner("Generating response..."):
-            try:
-                initial_response = ai.ask_gemini(file_result)
-                firebox_response = ai.refine_response(initial_response) if refine_response_enabled else initial_response
-            except Exception as e:
-                st.error(f"Error generating response: {e}")
-                firebox_response = "An error occurred generating the response."
+</script>
+"""
 
-        with st.chat_message("assistant"):
-            st.markdown(firebox_response)
+st.components.v1.html(search_bar_html, height=50)
 
-        st.session_state.messages.append({"role": "user", "content": file_result})
-        st.session_state.messages.append({"role": "assistant", "content": firebox_response})
+# Streamlit Message Handling
+message_data = st.session_state.get('message_data', {})
 
-# Text Input
-query = st.chat_input("Ask Firebox AI...")
-
-if query and not st.session_state.show_file_upload:
-    with st.chat_message("user"):
-        st.markdown(query)
-
-    with st.spinner("Generating response..."):
+if message_data:
+    if message_data.get('type') == 'file_upload':
         try:
-            initial_response = ai.ask_gemini(query)
-            firebox_response = ai.refine_response(initial_response) if refine_response_enabled else initial_response
+            image_data = message_data['data'].split(',')[1]
+            image_bytes = base64.b64decode(image_data)
+            image = Image.open(io.BytesIO(image_bytes))
+            file_result = process_image(image)
+
+            with st.chat_message("user"):
+                st.markdown(file_result)
+
+            with st.spinner("Generating response..."):
+                try:
+                    initial_response = ai.ask_gemini(file_result)
+                    firebox_response = ai.refine_response(initial_response) if refine_response_enabled else initial_response
+                except Exception as e:
+                    st.error(f"Error generating response: {e}")
+                    firebox_response = "An error occurred generating the response."
+
+            with st.chat_message("assistant"):
+                st.markdown(firebox_response)
+
+            st.session_state.messages.append({"role": "user", "content": file_result})
+            st.session_state.messages.append({"role": "assistant", "content": firebox_response})
+
         except Exception as e:
-            st.error(f"Error generating response: {e}")
-            firebox_response = "An error occurred generating the response."
+            st.error(f"Error processing uploaded image: {e}")
 
-    with st.chat_message("assistant"):
-        st.markdown(firebox_response)
+    elif message_data.get('type') == 'text_input':
+        query = message_data['query']
+        if query:
+            with st.chat_message("user"):
+                st.markdown(query)
 
-    st.session_state.messages.append({"role": "user", "content": query})
-    st.session_state.messages.append({"role": "assistant", "content": firebox_response})
+            with st.spinner("Generating response..."):
+                try:
+                    initial_response = ai.ask_gemini(query)
+                    firebox_response = ai.refine_response(initial_response) if refine_response_enabled else initial_response
+                except Exception as e:
+                    st.error(f"Error generating response: {e}")
+                    firebox_response = "An error occurred generating the response."
+
+            with st.chat_message("assistant"):
+                st.markdown(firebox_response)
+
+            st.session_state.messages.append({"role": "user", "content": query})
+            st.session_state.messages.append({"role": "assistant", "content": firebox_response})
+
+    st.session_state.message_data = {}  # Clear message data
 
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
+
+def handle_message(message):
+    st.session_state.message_data = message
+    st.experimental_rerun()
+
+st.components.v1.html(
+    """
+    <script>
+        window.addEventListener("message", function(event) {
+            window.parent.postMessage(event.data, "*");
+        });
+    </script>
+    """,
+    height=0,
+    on_message=handle_message,
+)
