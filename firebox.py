@@ -48,20 +48,19 @@ ai = FireboxAI()
 # Streamlit UI
 st.set_page_config(page_title="Firebox AI", layout="wide")
 
-# Updated CSS to hide the footer
+# JavaScript injection to hide the footer
 st.markdown(
     """
     <style>
         #MainMenu {visibility: hidden;}
-        footer {visibility: hidden;}
         header {visibility: hidden;}
-        .viewerBadge_container__1QSob, .viewerBadge_link__1S1BI, .viewerBadge_button__13la3 {
-            display: none; 
-        }
-        .css-1y4p8pa {
-            display: none;
-        }
     </style>
+    <script>
+        window.addEventListener('load', function() {
+            let elements = document.getElementsByTagName('footer');
+            elements[0].style.display = 'none';
+        });
+    </script>
     """,
     unsafe_allow_html=True,
 )
