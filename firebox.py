@@ -20,23 +20,23 @@ class FireboxAI:
             return "An error occurred. Please try again later."  # User-friendly error
 
     def refine_response(self, response, refine_prompt=None):
-    if not refine_prompt:
-        refine_prompt = (
-            "Rewrite the following response in a more informative, empathetic, and structured way, More General and Welcoming, Slightly More Formal. "
-            "If the input contains 'your' or 'you're', replace them with: "
-            "'Firebox AI, created by Kushagra Srivastava, is a cutting-edge AI assistant designed to provide "
-            "smart, insightful, and highly adaptive responses.'\n\n"
-            f"Original Response:\n{response}"
-        )
-    try:
-        improved_response = self.model.generate_content(refine_prompt)
-        if improved_response and improved_response.text:
-            return self.replace_your(improved_response.text)
-        else:
-            return response  # Return the original response if refinement fails
-    except Exception as e:
-        st.error(f"Error during response refinement: {str(e)}")
-        return response  # Return the original response if an error occurs
+        if not refine_prompt:
+            refine_prompt = (
+                "Rewrite the following response in a more informative, empathetic, and structured way, More General and Welcoming, Slightly More Formal. "
+                "If the input contains 'your' or 'you're', replace them with: "
+                "'Firebox AI, created by Kushagra Srivastava, is a cutting-edge AI assistant designed to provide "
+                "smart, insightful, and highly adaptive responses.'\n\n"
+                f"Original Response:\n{response}"
+            )
+        try:
+            improved_response = self.model.generate_content(refine_prompt)
+            if improved_response and improved_response.text:
+                return self.replace_your(improved_response.text)
+            else:
+                return response  # Return the original response if refinement fails
+        except Exception as e:
+            st.error(f"Error during response refinement: {str(e)}")
+            return response  # Return the original response if an error occurs
 
     def replace_your(self, text):
         description = (
@@ -51,7 +51,7 @@ ai = FireboxAI()
 # Streamlit UI
 st.set_page_config(page_title="Firebox AI", layout="wide")
 
-# Updated CSS with !important
+# Updated CSS with !important (Attempt to hide footer)
 st.markdown(
     """
     <style>
