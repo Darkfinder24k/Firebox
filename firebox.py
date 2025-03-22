@@ -1,6 +1,7 @@
 import streamlit as st
 import google.generativeai as genai
 from PIL import Image
+import base64
 
 # Secure API Key Handling using secrets.toml
 GEMINI_API_KEY = "AIzaSyD9hmqBaXvZqAUxQ3mnejzM_EwPMeZQod4"
@@ -83,37 +84,45 @@ if "messages" not in st.session_state:
 
 refine_response_enabled = st.sidebar.checkbox("Refine Response", value=True)
 
-# File Upload Button
-uploaded_file = st.file_uploader("Upload file", type=["png", "jpg", "jpeg"])
+# Plus Button and File Upload Logic
+if "show_file_upload" not in st.session_state:
+    st.session_state.show_file_upload = False
 
-if uploaded_file:
-    file_type = uploaded_file.type
-    if "image" in file_type:
-        file_result = process_image(uploaded_file)
-    else:
-        file_result = "Unsupported file type"
+def toggle_file_upload():
+    st.session_state.show_file_upload = not st.session_state.show_file_upload
 
-    with st.chat_message("user"):
-        st.markdown(file_result)
+plus_button = st.button("+", on_click=toggle_file_upload)
 
-    with st.spinner("Generating response..."):
-        try:
-            initial_response = ai.ask_gemini(file_result)
-            firebox_response = ai.refine_response(initial_response) if refine_response_enabled else initial_response
-        except Exception as e:
-            st.error(f"Error generating response: {e}")
-            firebox_response = "An error occurred generating the response."
+if st.session_state.show_file_upload:
+    uploaded_file = st.file_uploader("Upload file", type=["png", "jpg", "jpeg"])
+    if uploaded_file:
+        file_type = uploaded_file.type
+        if "image" in file_type:
+            file_result = process_image(uploaded_file)
+        else:
+            file_result = "Unsupported file type"
 
-    with st.chat_message("assistant"):
-        st.markdown(firebox_response)
+        with st.chat_message("user"):
+            st.markdown(file_result)
 
-    st.session_state.messages.append({"role": "user", "content": file_result})
-    st.session_state.messages.append({"role": "assistant", "content": firebox_response})
+        with st.spinner("Generating response..."):
+            try:
+                initial_response = ai.ask_gemini(file_result)
+                firebox_response = ai.refine_response(initial_response) if refine_response_enabled else initial_response
+            except Exception as e:
+                st.error(f"Error generating response: {e}")
+                firebox_response = "An error occurred generating the response."
+
+        with st.chat_message("assistant"):
+            st.markdown(firebox_response)
+
+        st.session_state.messages.append({"role": "user", "content": file_result})
+        st.session_state.messages.append({"role": "assistant", "content": firebox_response})
 
 # Text Input
 query = st.chat_input("Ask Firebox AI...")
 
-if query:
+if query and not st.session_state.show_file_upload:
     with st.chat_message("user"):
         st.markdown(query)
 
