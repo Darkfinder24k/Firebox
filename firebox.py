@@ -132,7 +132,7 @@ def receive_message(message):
         st.session_state.speech_text = message["speech_text"]
 
 st.components.v1.html(
-    f"""
+    """
     <script>
         window.addEventListener("message", function(event) {
             window.parent.postMessage(event.data, "*");
@@ -174,25 +174,4 @@ elif file_result:
         st.markdown(firebox_response)
 
     st.session_state.messages.append({"role": "user", "content": file_result})
-    st.session_state.messages.append({"role": "assistant", "content": firebox_response})
-
-else:
-    query = st.chat_input("Ask Firebox AI...")
-
-    if query:
-        with st.chat_message("user"):
-            st.markdown(query)
-
-        with st.spinner("Generating response..."):
-            initial_response = ai.ask_gemini(query)
-            firebox_response = ai.refine_response(initial_response) if refine_response_enabled else initial_response
-
-        with st.chat_message("assistant"):
-            st.markdown(firebox_response)
-
-        st.session_state.messages.append({"role": "user", "content": query})
-        st.session_state.messages.append({"role": "assistant", "content": firebox_response})
-
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+    st.session_state.messages.append({"role":
