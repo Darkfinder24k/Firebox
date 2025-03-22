@@ -1,7 +1,4 @@
 streamlit
-requests
-google.generativeai
-ollama
-cv2
-PIL
-io
+google-generativeai
+opencv-python
+Pillow
