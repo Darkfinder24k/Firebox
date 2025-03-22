@@ -2,3 +2,6 @@ streamlit
 requests
 google.generativeai
 ollama
+cv2
+PIL
+io
