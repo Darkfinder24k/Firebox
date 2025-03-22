@@ -1,0 +1,14 @@
+[theme]
+base="dark"
+
+[server]
+enableStaticServing = false
+
+[client]
+showSidebarNavigation = false
+
+[global]
+disableWidgetStateDuplicationWarning = true
+
+[runner]
+magicEnabled = false
