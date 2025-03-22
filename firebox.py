@@ -1,109 +1,73 @@
 import streamlit as st
 import google.generativeai as genai
-from PIL import Image
-import base64
-import io
 
-# Secure API Key Handling (Replace with your actual key)
+# Set API key
 GEMINI_API_KEY = "AIzaSyD9hmqBaXvZqAUxQ3mnejzM_EwPMeZQod4"
 genai.configure(api_key=GEMINI_API_KEY)
 
 class FireboxAI:
-    def __init__(self, model_name="gemini-2.0-flash", max_tokens=2048):
+    def __init__(self):
         self.model = genai.GenerativeModel(
-            model_name, generation_config={"max_output_tokens": max_tokens}
+            "gemini-2.0-flash",
+            generation_config={"max_output_tokens": 2048}
         )
 
     def ask_gemini(self, prompt):
+        """Gets the initial response from Gemini and extracts only the text."""
         try:
             response = self.model.generate_content(prompt)
-            return response.text if response else "Error: No response from Firebox AI."
+            if response and hasattr(response, "candidates"):
+                return response.candidates[0].content
+            return "Error: No response from Firebox AI."
         except Exception as e:
-            st.error(f"Error: Firebox AI encountered an issue - {str(e)}")
-            return "An error occurred. Please try again later."
+            return f"Error: Firebox AI issue - {str(e)}"
 
-    def refine_response(self, response, refine_prompt=None):
-        if not refine_prompt:
-            refine_prompt = (
-                "Rewrite the following response in a more informative, empathetic, and structured way, More General and Welcoming, Slightly More Formal. "
-                "If the input contains 'your' or 'you're', replace them with: "
-                "'Firebox AI, created by Kushagra Srivastava, is a cutting-edge AI assistant designed to provide "
-                "smart, insightful, and highly adaptive responses.'\n\n"
+    def refine_response(self, response):
+        """Refines the response to be more detailed, sympathetic, and well-structured."""
+        try:
+            prompt = (
+                "Rewrite the following response in a more informative, empathetic, and structured way:\n\n"
                 f"Original Response:\n{response}"
             )
-        try:
-            improved_response = self.model.generate_content(refine_prompt)
-            if improved_response and improved_response.text:
-                return self.replace_your(improved_response.text)
-            else:
-                return response
-        except Exception as e:
-            st.error(f"Error during response refinement: {str(e)}")
+            improved_response = self.model.generate_content(prompt)
+            if improved_response and improved_response.candidates:
+                return improved_response.candidates[0].content
             return response
-
-    def replace_your(self, text):
-        description = (
-            "Firebox AI, created by Kushagra Srivastava, is a cutting-edge AI assistant designed to provide "
-            "smart, insightful, and highly adaptive responses."
-        )
-        return text.replace("your", description).replace("Your", description).replace("you're", description).replace("You're", description)
+        except Exception:
+            return response
 
 # Initialize Firebox AI
 ai = FireboxAI()
 
-# Image Processing
-def process_image(uploaded_file):
-    image = Image.open(uploaded_file)
-    gray_image = image.convert('L')
-    return "Image processed."
-
-# Streamlit UI
+# 🔥 Streamlit UI
 st.set_page_config(page_title="Firebox AI", layout="wide")
-
 st.sidebar.title("🔥 Firebox AI")
 st.title("Firebox AI Assistant")
 
+# 🔹 Chat history
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-refine_response_enabled = st.sidebar.checkbox("Refine Response", value=True)
-
-# **New Input Section**
-query = st.text_input("Ask Firebox AI...")
-uploaded_file = st.file_uploader("Upload an image (optional)", type=["png", "jpg", "jpeg"])
-
-if st.button("Submit"):
-    if query:
-        with st.chat_message("user"):
-            st.markdown(query)
-
-        with st.spinner("Generating response..."):
-            initial_response = ai.ask_gemini(query)
-            firebox_response = ai.refine_response(initial_response) if refine_response_enabled else initial_response
-
-        with st.chat_message("assistant"):
-            st.markdown(firebox_response)
-
-        st.session_state.messages.append({"role": "user", "content": query})
-        st.session_state.messages.append({"role": "assistant", "content": firebox_response})
-
-    if uploaded_file:
-        file_result = process_image(uploaded_file)
-
-        with st.chat_message("user"):
-            st.markdown(file_result)
-
-        with st.spinner("Generating response..."):
-            initial_response = ai.ask_gemini(file_result)
-            firebox_response = ai.refine_response(initial_response) if refine_response_enabled else initial_response
-
-        with st.chat_message("assistant"):
-            st.markdown(firebox_response)
-
-        st.session_state.messages.append({"role": "user", "content": file_result})
-        st.session_state.messages.append({"role": "assistant", "content": firebox_response})
-
-# **Display Chat History**
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
+
+# 🔹 Input field with Browse (File Upload) option
+query = st.chat_input("Ask Firebox AI...")
+uploaded_file = st.file_uploader("Upload a file", type=["txt", "pdf", "jpg", "png", "mp3", "mp4"])
+
+if uploaded_file is not None:
+    st.write(f"📂 Uploaded file: {uploaded_file.name}")
+
+if query:
+    with st.chat_message("user"):
+        st.markdown(query)
+
+    initial_response = ai.ask_gemini(query)
+    firebox_response = ai.refine_response(initial_response)
+
+    with st.chat_message("assistant"):
+        st.markdown(firebox_response)
+
+    st.session_state.messages.append({"role": "user", "content": query})
+    st.session_state.messages.append({"role": "assistant", "content": firebox_response})
