@@ -30,7 +30,7 @@ class FireboxAI:
             )
         try:
             improved_response = self.model.generate_content(refine_prompt)
-            return self.replace_your(improved_response.text) if improved_response else response
+            return self.replace_your(improved-response.text) if improved_response else response
         except Exception as e:
             st.error(f"Error during response refinement: {str(e)}")
             return response
@@ -48,19 +48,20 @@ ai = FireboxAI()
 # Streamlit UI
 st.set_page_config(page_title="Firebox AI", layout="wide")
 
-# JavaScript injection to hide the footer
+# Updated CSS with !important
 st.markdown(
     """
     <style>
         #MainMenu {visibility: hidden;}
+        footer {visibility: hidden !important;}
         header {visibility: hidden;}
+        .viewerBadge_container__1QSob, .viewerBadge_link__1S1BI, .viewerBadge_button__13la3 {
+            display: none !important; 
+        }
+        .css-1y4p8pa {
+            display: none !important;
+        }
     </style>
-    <script>
-        window.addEventListener('load', function() {
-            let elements = document.getElementsByTagName('footer');
-            elements[0].style.display = 'none';
-        });
-    </script>
     """,
     unsafe_allow_html=True,
 )
