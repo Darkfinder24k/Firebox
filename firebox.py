@@ -4,7 +4,7 @@ from PIL import Image
 import base64
 import io
 
-# Secure API Key Handling using secrets.toml
+# Secure API Key Handling (Replace with your actual key)
 GEMINI_API_KEY = "AIzaSyD9hmqBaXvZqAUxQ3mnejzM_EwPMeZQod4"
 genai.configure(api_key=GEMINI_API_KEY)
 
