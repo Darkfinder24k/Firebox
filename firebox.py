@@ -168,10 +168,4 @@ elif file_result:
 
     with st.spinner("Generating response..."):
         initial_response = ai.ask_gemini(file_result)
-        firebox_response = ai.refine_response(initial_response) if refine_response_enabled else initial_response
-
-    with st.chat_message("assistant"):
-        st.markdown(firebox_response)
-
-    st.session_state.messages.append({"role": "user", "content": file_result})
-    st.session_state.messages.append({"role":
+        firebox_response = ai.refine_response(initial_response) if refine_response_enabled else initial_
