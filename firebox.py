@@ -2,6 +2,7 @@ import streamlit as st
 import google.generativeai as genai
 from PIL import Image
 import base64
+import io
 
 # Secure API Key Handling using secrets.toml
 GEMINI_API_KEY = "AIzaSyD9hmqBaXvZqAUxQ3mnejzM_EwPMeZQod4"
@@ -145,12 +146,10 @@ search_bar_html = """
 st.components.v1.html(search_bar_html, height=50)
 
 # Streamlit Message Handling
-message_data = st.session_state.get('message_data', {})
-
-if message_data:
-    if message_data.get('type') == 'file_upload':
+def handle_message(message):
+    if message.get('type') == 'file_upload':
         try:
-            image_data = message_data['data'].split(',')[1]
+            image_data = message['data'].split(',')[1]
             image_bytes = base64.b64decode(image_data)
             image = Image.open(io.BytesIO(image_bytes))
             file_result = process_image(image)
@@ -175,8 +174,8 @@ if message_data:
         except Exception as e:
             st.error(f"Error processing uploaded image: {e}")
 
-    elif message_data.get('type') == 'text_input':
-        query = message_data['query']
+    elif message.get('type') == 'text_input':
+        query = message['query']
         if query:
             with st.chat_message("user"):
                 st.markdown(query)
@@ -195,16 +194,6 @@ if message_data:
             st.session_state.messages.append({"role": "user", "content": query})
             st.session_state.messages.append({"role": "assistant", "content": firebox_response})
 
-    st.session_state.message_data = {}  # Clear message data
-
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
-
-def handle_message(message):
-    st.session_state.message_data = message
-    st.experimental_rerun()
-
 st.components.v1.html(
     """
     <script>
@@ -216,3 +205,7 @@ st.components.v1.html(
     height=0,
     on_message=handle_message,
 )
+
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
