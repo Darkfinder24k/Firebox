@@ -1,3 +1,5 @@
 streamlit
 google-generativeai
+SpeechRecognition
+pyttsx3
 Pillow
