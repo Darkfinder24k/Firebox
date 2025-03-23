@@ -35,6 +35,10 @@ class FireboxAI:
 # Initialize Firebox AI
 ai = FireboxAI(is_premium)
 
+# Initialize session state for chat history
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
 # Memory Slider
 memory_depth = st.sidebar.slider("Memory Depth", min_value=1, max_value=10, value=5)
 
