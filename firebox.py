@@ -2,7 +2,7 @@ import streamlit as st
 import google.generativeai as genai
 import time
 
-# 🔒 Secure API Key Handling (Move to ENV Variables in Production)
+# 🔒 Secure API Key Handling (Use ENV Variables in Production)
 API_KEY = "AIzaSyD9hmqBaXvZqAUxQ3mnejzM_EwPMeZQod4"
 genai.configure(api_key=API_KEY)
 
@@ -26,13 +26,13 @@ class FireboxAI:
         try:
             response = self.model.generate_content(prompt)
             return response.text if response else "Error: No response."
-        except Exception:
-            return "Error: Firebox AI encountered an issue. Please try again later."
+        except Exception as e:
+            return f"Error: {str(e)}"
 
 # 🔥 Initialize Firebox AI
 ai = FireboxAI(is_premium)
 
-# 🎉 Firebox Premium Promotion Popup
+# 🎉 Firebox Premium Promotion Popup (Shows on Page Load)
 if "show_premium_popup" not in st.session_state:
     st.session_state.show_premium_popup = True
 
@@ -51,6 +51,7 @@ else:
 # 📌 Memory Slider
 memory_depth = st.sidebar.slider("Memory Depth", min_value=1, max_value=10, value=5)
 
+# 🔄 Ensure Chat History Exists
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
