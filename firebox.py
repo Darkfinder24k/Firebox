@@ -56,28 +56,35 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 
 # Speech Recognition (Only for Premium Users)
-if is_premium:
-    if st.sidebar.button("🎙️ Use Voice Input"):
-        def recognize_speech():
-    recognizer = sr.Recognizer()
-    with sr.Microphone() as source:
-        st.write("🎤 Listening... Speak now")
-        recognizer.adjust_for_ambient_noise(source)
-        try:
-            audio = recognizer.listen(source, timeout=5)
-            text = recognizer.recognize_google(audio)
-            st.write(f"🗣️ You said: {text}")
-            return text
-        except sr.UnknownValueError:
-            st.warning("Sorry, I couldn't understand that.")
-            return None
-        except sr.RequestError:
-            st.error("Error with speech recognition service.")
-            return None
-        except AttributeError:
-            st.error("PyAudio is missing. Please install it or use a different speech input method.")
-            return None
+if is_premium and st.sidebar.button("🎙️ Use Voice Input"):
+    def recognize_speech():
+        recognizer = sr.Recognizer()
+        with sr.Microphone() as source:
+            st.write("🎤 Listening... Speak now")
+            recognizer.adjust_for_ambient_noise(source)
+            try:
+                audio = recognizer.listen(source, timeout=5)
+                text = recognizer.recognize_google(audio)
+                st.write(f"🗣️ You said: {text}")
+                return text
+            except sr.UnknownValueError:
+                st.warning("Sorry, I couldn't understand that.")
+                return None
+            except sr.RequestError:
+                st.error("Error with speech recognition service.")
+                return None
 
+    # Call the function
+    speech_text = recognize_speech()
+    if speech_text:
+        with st.chat_message("user"):
+            st.markdown(speech_text)
+        with st.spinner("Generating response..."):
+            firebox_response = ai.ask_firebox(speech_text)
+        with st.chat_message("assistant"):
+            st.markdown(firebox_response)
+        st.session_state.messages.append({"role": "user", "content": speech_text})
+        st.session_state.messages.append({"role": "assistant", "content": firebox_response})
 
 # Text Input Query
 txt_query = st.chat_input("Ask Firebox AI...")
@@ -93,6 +100,7 @@ if txt_query:
     st.session_state.messages.append({"role": "user", "content": txt_query})
     st.session_state.messages.append({"role": "assistant", "content": firebox_response})
 
+# Display previous chat messages
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
