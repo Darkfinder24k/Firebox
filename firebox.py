@@ -28,8 +28,7 @@ class FireboxAI:
             response = self.model.generate_content(prompt)
             return response.text if response else "Error: No response."
         except Exception as e:
-            st.error(f"Error: Firebox AI encountered an issue - {str(e)}")
-            return "An error occurred. Please try again later."
+            return f"Error: Firebox AI encountered an issue - {str(e)}"
 
 # Initialize Firebox AI
 ai = FireboxAI(is_premium)
@@ -80,13 +79,10 @@ if is_premium:
         if speech_text:
             with st.chat_message("user"):
                 st.markdown(speech_text)
-
             with st.spinner("Generating response..."):
                 firebox_response = ai.ask_firebox(speech_text)
-            
             with st.chat_message("assistant"):
                 st.markdown(firebox_response)
-
             st.session_state.messages.append({"role": "user", "content": speech_text})
             st.session_state.messages.append({"role": "assistant", "content": firebox_response})
 
@@ -95,15 +91,12 @@ txt_query = st.chat_input("Ask Firebox AI...")
 if txt_query:
     with st.chat_message("user"):
         st.markdown(txt_query)
-
     with st.spinner("Generating response..."):
         firebox_response = ai.ask_firebox(txt_query)
         if not is_premium:
             time.sleep(3)  # Simulating slower response generation for free users
-
     with st.chat_message("assistant"):
         st.markdown(firebox_response)
-
     st.session_state.messages.append({"role": "user", "content": txt_query})
     st.session_state.messages.append({"role": "assistant", "content": firebox_response})
 
