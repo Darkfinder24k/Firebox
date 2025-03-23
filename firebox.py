@@ -112,12 +112,13 @@ if time.time() - st.session_state.last_premium_prompt > 180:
     st.sidebar.warning("🔥 Upgrade to Firebox Premium for ultra-fast responses, premium UI, and voice support!")
     st.session_state.last_premium_prompt = time.time()
 
-# Hide Streamlit Branding and Fork Button
+# Hide Streamlit Branding, Fork Button, and Footer
 hide_streamlit_style = """
     <style>
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
         header {visibility: hidden;}
+        .stDeployButton {display: none !important;}
     </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
