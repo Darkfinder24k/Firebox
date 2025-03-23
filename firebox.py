@@ -26,7 +26,9 @@ class FireboxAI:
     def ask_firebox(self, prompt):
         try:
             response = self.model.generate_content(prompt)
-            return response.text if response else "Error: No response."
+            if response:
+                return response.text.replace("Google", "Firebox")  # Ensure no mention of Google
+            return "Error: No response."
         except Exception:
             return "Error: Firebox AI encountered an issue. Please try again later."
 
