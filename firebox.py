@@ -105,7 +105,8 @@ if txt_query:
 
     with st.spinner("Generating response..."):
         firebox_response = ai.ask_firebox(txt_query, refine_times=10 if is_premium else 0)
-        time.sleep(3)  # Simulating slower response generation for free users
+        if not is_premium:
+            time.sleep(3)  # Simulating slower response generation for free users
 
     with st.chat_message("assistant"):
         st.markdown(firebox_response)
