@@ -1,14 +1,13 @@
 import streamlit as st
 import google.generativeai as genai
 import time
-import speech_recognition as sr
 
 # 🔒 Secure API Key Handling (Move to ENV Variables in Production)
-API_KEY = "AIzaSyD9hmqBaXvZqAUxQ3mnejzM_EwPMeZQod4" # Replace with your actual API key
+API_KEY = "AIzaSyD9hmqBaXvZqAUxQ3mnejzM_EwPMeZQod4"
 genai.configure(api_key=API_KEY)
 
 # 🔑 User Subscription Database (Demo - Replace with Firebase/Database)
-premium_users = {"kushagra@gmail.com", "premium_user@example.com"}
+premium_users = {"kushagra@gmail.com", "premium_user@example.com"}  
 
 # ⚙️ Streamlit Page Configuration
 st.set_page_config(page_title="Firebox AI", layout="wide")
@@ -20,15 +19,15 @@ is_premium = user_email in premium_users
 # 🧠 AI Model Selection
 class FireboxAI:
     def __init__(self, is_premium, max_tokens=2048):
-        model_name = "gemini-pro" if not is_premium else "gemini-pro" #modified to gemini-pro for both cases. flash is not supported currently.
+        model_name = "gemini-2.0-flash" if is_premium else "gemini-1.5-pro"
         self.model = genai.GenerativeModel(model_name, generation_config={"max_output_tokens": max_tokens})
 
     def ask_firebox(self, prompt):
         try:
             response = self.model.generate_content(prompt)
-            return response.text if response and response.text else "Error: No response."
-        except Exception as e:
-            return f"Error: Firebox AI encountered an issue. Please try again later. {e}"
+            return response.text if response else "Error: No response."
+        except Exception:
+            return "Error: Firebox AI encountered an issue. Please try again later."
 
 # 🔥 Initialize Firebox AI
 ai = FireboxAI(is_premium)
@@ -38,7 +37,7 @@ if "show_premium_popup" not in st.session_state:
     st.session_state.show_premium_popup = True
 
 if st.session_state.show_premium_popup:
-    st.warning("🔥 Upgrade to Firebox Premium for ultra-fast responses, premium UI, and voice support!")
+    st.warning("🔥 Upgrade to Firebox Premium for ultra-fast responses, premium UI, and enhanced features!")
     st.session_state.show_premium_popup = False
 
 # 🎨 UI Differences for Premium Users
@@ -54,40 +53,6 @@ memory_depth = st.sidebar.slider("Memory Depth", min_value=1, max_value=10, valu
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
-
-# 🎙️ Speech Recognition (Only for Premium Users)
-if is_premium:
-    if st.sidebar.button("🎙️ Use Voice Input"):
-        def recognize_speech():
-            recognizer = sr.Recognizer()
-            with sr.Microphone() as source:
-                st.write("🎤 Listening... Speak now")
-                recognizer.adjust_for_ambient_noise(source)
-                try:
-                    audio = recognizer.listen(source, timeout=5)
-                    text = recognizer.recognize_google(audio)
-                    st.write(f"🗣️ You said: {text}")
-                    return text
-                except sr.UnknownValueError:
-                    st.warning("Sorry, I couldn't understand that.")
-                    return None
-                except sr.RequestError:
-                    st.error("Error with speech recognition service.")
-                    return None
-                except Exception as e:
-                    st.error(f"An error occurred during speech recognition: {e}")
-                    return None
-
-        speech_text = recognize_speech()
-        if speech_text:
-            with st.chat_message("user"):
-                st.markdown(speech_text)
-            with st.spinner("Generating response..."):
-                firebox_response = ai.ask_firebox(speech_text)
-            with st.chat_message("assistant"):
-                st.markdown(firebox_response)
-            st.session_state.messages.append({"role": "user", "content": speech_text})
-            st.session_state.messages.append({"role": "assistant", "content": firebox_response})
 
 # 📝 Text Input Query
 txt_query = st.chat_input("Ask Firebox AI...")
@@ -113,7 +78,7 @@ if "last_premium_prompt" not in st.session_state:
     st.session_state.last_premium_prompt = time.time()
 
 if time.time() - st.session_state.last_premium_prompt > 180:
-    st.sidebar.warning("🔥 Upgrade to Firebox Premium for ultra-fast responses, premium UI, and voice support!")
+    st.sidebar.warning("🔥 Upgrade to Firebox Premium for ultra-fast responses, premium UI, and enhanced features!")
     st.session_state.last_premium_prompt = time.time()
 
 # 🚫 Hide Streamlit Branding
