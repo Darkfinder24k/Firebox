@@ -20,7 +20,7 @@ is_premium = user_email in premium_users
 # AI Model Selection
 class FireboxAI:
     def __init__(self, is_premium, max_tokens=2048):
-        model_name = "gemini-pro" if is_premium else "gemini-2.0-flash"
+        model_name = "gemini-2.0-flash" if is_premium else "gemini-1.5-pro"
         self.model = genai.GenerativeModel(model_name, generation_config={"max_output_tokens": max_tokens})
 
     def ask_firebox(self, prompt):
