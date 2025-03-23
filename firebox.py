@@ -3,21 +3,25 @@ import google.generativeai as genai
 import speech_recognition as sr
 from PIL import Image
 
-# ✅ **Set Page Configuration FIRST**
+# ✅ Set Page Configuration FIRST
 st.set_page_config(page_title="Firebox AI", layout="wide")
 
-# ✅ **Secure API Key Handling**
+# ✅ Initialize session state
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+# ✅ Secure API Key Handling
 GEMINI_API_KEY = "AIzaSyD9hmqBaXvZqAUxQ3mnejzM_EwPMeZQod4"  # ❗Replace with your actual key
 genai.configure(api_key=GEMINI_API_KEY)
 
-# ✅ **User Subscription Database (Demo - Replace with Firebase/Database)**
+# ✅ User Subscription Database (Demo - Replace with Firebase/Database)
 premium_users = {"kushagra@gmail.com", "premium_user@example.com"}  # Add premium users
 
-# ✅ **User Authentication**
+# ✅ User Authentication
 user_email = st.sidebar.text_input("Enter your Email:")
 is_premium = user_email in premium_users
 
-# ✅ **AI Model Selection (Different for Free vs Premium)**
+# ✅ AI Model Selection (Different for Free vs Premium)
 class FireboxAI:
     def __init__(self, is_premium, max_tokens=2048):
         model_name = "gemini-pro" if is_premium else "gemini-2.0-flash"
@@ -41,23 +45,23 @@ class FireboxAI:
             full_prompt = f"Previous conversation:\n{memory}\n\nUser: {prompt}\n\nFirebox AI:"
             raw_response = self.model.generate_content(full_prompt).text
             
-            # 🔥 **Refine response 10 times**
+            # 🔥 Refine response 10 times
             refined_response = self.refine_response(raw_response)
             
-            # ❌ **Remove mentions of Google**
+            # ❌ Remove mentions of Google
             clean_response = refined_response.replace("Google", "Firebox AI")
             return clean_response
         except Exception as e:
             st.error(f"Error: Firebox AI encountered an issue - {str(e)}")
             return "An error occurred. Please try again later."
 
-# ✅ **Initialize Firebox AI**
+# ✅ Initialize Firebox AI
 ai = FireboxAI(is_premium)
 
-# ✅ **Memory Slider**
+# ✅ Memory Slider
 memory_depth = st.sidebar.slider("Memory Depth", min_value=1, max_value=10, value=5)
 
-# ✅ **Speech Recognition**
+# ✅ Speech Recognition
 def recognize_speech():
     recognizer = sr.Recognizer()
     with sr.Microphone() as source:
@@ -75,11 +79,11 @@ def recognize_speech():
             st.error("Error with speech recognition service.")
             return None
 
-# ✅ **Streamlit UI**
+# ✅ Streamlit UI
 st.sidebar.title("🔥 Firebox AI - Premium" if is_premium else "🔥 Firebox AI - Free")
 st.title("Firebox AI Assistant")
 
-# ✅ **Voice Input Handling**
+# ✅ Voice Input Handling
 if st.sidebar.button("🎙️ Use Voice Input"):
     speech_text = recognize_speech()
     if speech_text:
@@ -95,7 +99,7 @@ if st.sidebar.button("🎙️ Use Voice Input"):
         st.session_state.messages.append({"role": "user", "content": speech_text})
         st.session_state.messages.append({"role": "assistant", "content": firebox_response})
 
-# ✅ **Text Input Handling**
+# ✅ Text Input Handling
 query = st.chat_input("Ask Firebox AI...")
 if query:
     with st.chat_message("user"):
@@ -110,7 +114,7 @@ if query:
     st.session_state.messages.append({"role": "user", "content": query})
     st.session_state.messages.append({"role": "assistant", "content": firebox_response})
 
-# ✅ **Display Chat History (Without Duplicates)**
+# ✅ Display Chat History (Without Duplicates)
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
