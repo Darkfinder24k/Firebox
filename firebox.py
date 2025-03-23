@@ -26,9 +26,7 @@ class FireboxAI:
     def ask_firebox(self, prompt):
         try:
             response = self.model.generate_content(prompt)
-            if response:
-                return response.text.replace("Google", "Firebox")  # Ensure no mention of Google
-            return "Error: No response."
+            return response.text if response else "Error: No response."
         except Exception:
             return "Error: Firebox AI encountered an issue. Please try again later."
 
@@ -113,3 +111,13 @@ if "last_premium_prompt" not in st.session_state:
 if time.time() - st.session_state.last_premium_prompt > 180:
     st.sidebar.warning("🔥 Upgrade to Firebox Premium for ultra-fast responses, premium UI, and voice support!")
     st.session_state.last_premium_prompt = time.time()
+
+# Hide Streamlit Branding and Fork Button
+hide_streamlit_style = """
+    <style>
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        header {visibility: hidden;}
+    </style>
+"""
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
