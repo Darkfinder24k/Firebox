@@ -28,7 +28,7 @@ class FireboxAI:
             response = self.model.generate_content(prompt)
             return response.text if response else "Error: No response."
         except Exception as e:
-            return f"Error: Firebox AI encountered an issue - {str(e)}"
+            return "Error: Firebox AI encountered an issue. Please try again later."
 
 # Initialize Firebox AI
 ai = FireboxAI(is_premium)
