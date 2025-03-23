@@ -1,130 +1,103 @@
 import streamlit as st
 import google.generativeai as genai
+import speech_recognition as sr
+import pyttsx3
 from PIL import Image
-import io
 
-# Secure API Key Handling using secrets.toml
+# Initialize TTS Engine
+engine = pyttsx3.init()
+engine.setProperty("rate", 150)  # Speech speed
+engine.setProperty("volume", 1.0)  # Volume level
+
+# Secure API Key Handling
 GEMINI_API_KEY = "AIzaSyD9hmqBaXvZqAUxQ3mnejzM_EwPMeZQod4"
 genai.configure(api_key=GEMINI_API_KEY)
 
+# User Subscription Database (Demo - Replace with Firebase/Database)
+premium_users = {"kushagra@gmail.com", "premium_user@example.com"}  # Add premium users here
+
+# User Authentication
+user_email = st.sidebar.text_input("Enter your Email:")
+is_premium = user_email in premium_users
+
+# AI Model Selection (Different for Free vs Premium)
 class FireboxAI:
-    def __init__(self, model_name="gemini-2.0-flash", max_tokens=2048):
+    def __init__(self, is_premium, max_tokens=2048):
+        model_name = "gemini-pro" if is_premium else "gemini-2.0-flash"
         self.model = genai.GenerativeModel(
             model_name, generation_config={"max_output_tokens": max_tokens}
         )
 
-    def ask_gemini(self, prompt):
+    def ask_gemini(self, prompt, memory_depth):
         try:
-            response = self.model.generate_content(prompt)
+            memory = "\n".join([msg["content"] for msg in st.session_state.messages[-memory_depth:]])
+            full_prompt = f"Previous conversation:\n{memory}\n\nUser: {prompt}\n\nFirebox AI:"
+            response = self.model.generate_content(full_prompt)
             return response.text if response else "Error: No response from Firebox AI."
         except Exception as e:
             st.error(f"Error: Firebox AI encountered an issue - {str(e)}")
             return "An error occurred. Please try again later."
 
-    def refine_response(self, response, refine_prompt=None):
-        if not refine_prompt:
-            refine_prompt = (
-                "Rewrite the following response in a more informative, empathetic, and structured way, More General and Welcoming, Slightly More Formal. "
-                "If the input contains 'your' or 'you're', replace them with: "
-                "'Firebox AI, created by Kushagra Srivastava, is a cutting-edge AI assistant designed to provide "
-                "smart, insightful, and highly adaptive responses.'\n\n"
-                f"Original Response:\n{response}"
-            )
-        try:
-            improved_response = self.model.generate_content(refine_prompt)
-            if improved_response and improved_response.text:
-                return self.replace_your(improved_response.text)
-            else:
-                return response
-        except Exception as e:
-            st.error(f"Error during response refinement: {str(e)}")
-            return response
-
-    def replace_your(self, text):
-        description = (
-            "Firebox AI, created by Kushagra Srivastava, is a cutting-edge AI assistant designed to provide "
-            "smart, insightful, and highly adaptive responses."
-        )
-        return text.replace("your", description).replace("Your", description).replace("you're", description).replace("You're", description)
+    def speak_response(self, text):
+        engine.say(text)
+        engine.runAndWait()
 
 # Initialize Firebox AI
-ai = FireboxAI()
+ai = FireboxAI(is_premium)
 
-# Image Processing
-def process_image(uploaded_file):
-    image = Image.open(uploaded_file)
-    # Basic example: convert to grayscale
-    gray_image = image.convert('L')
-    return "Image processed."
+# Memory Slider
+memory_depth = st.sidebar.slider("Memory Depth", min_value=1, max_value=10, value=5)
 
-# File Upload Handler (No Video)
-def handle_file_upload():
-    uploaded_file = st.file_uploader("Upload file", type=["png", "jpg", "jpeg"])
-    if uploaded_file:
-        file_type = uploaded_file.type
-        if "image" in file_type:
-            return process_image(uploaded_file)
-        else:
-            return "Unsupported file type"
-    return None
+# Speech Recognition
+def recognize_speech():
+    recognizer = sr.Recognizer()
+    with sr.Microphone() as source:
+        st.write("🎤 Listening... Speak now")
+        recognizer.adjust_for_ambient_noise(source)
+        try:
+            audio = recognizer.listen(source, timeout=5)
+            text = recognizer.recognize_google(audio)
+            st.write(f"🗣️ You said: {text}")
+            return text
+        except sr.UnknownValueError:
+            st.warning("Sorry, I couldn't understand that.")
+            return None
+        except sr.RequestError:
+            st.error("Error with speech recognition service.")
+            return None
 
 # Streamlit UI
 st.set_page_config(page_title="Firebox AI", layout="wide")
-
-# Updated CSS with !important
-st.markdown(
-    """
-    <style>
-        #MainMenu {visibility: hidden;}
-        footer {visibility: hidden !important;}
-        header {visibility: hidden;}
-        .viewerBadge_container__1QSob, .viewerBadge_link__1S1BI, .viewerBadge_button__13la3 {
-            display: none !important; 
-        }
-        .css-1y4p8pa {
-            display: none !important;
-        }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
-st.sidebar.title("🔥 Firebox AI")
+st.sidebar.title("🔥 Firebox AI - Premium" if is_premium else "🔥 Firebox AI - Free")
 st.title("Firebox AI Assistant")
 
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+if st.sidebar.button("🎙️ Use Voice Input"):
+    speech_text = recognize_speech()
+    if speech_text:
+        with st.chat_message("user"):
+            st.markdown(speech_text)
 
-refine_response_enabled = st.sidebar.checkbox("Refine Response", value=True)
+        with st.spinner("Generating response..."):
+            firebox_response = ai.ask_gemini(speech_text, memory_depth)
 
-# Main input handling
-file_result = handle_file_upload()
+        with st.chat_message("assistant"):
+            st.markdown(firebox_response)
+            ai.speak_response(firebox_response)
+
+        st.session_state.messages.append({"role": "user", "content": speech_text})
+        st.session_state.messages.append({"role": "assistant", "content": firebox_response})
+
 query = st.chat_input("Ask Firebox AI...")
-
-if file_result:
-    with st.chat_message("user"):
-        st.markdown(file_result)
-
-    with st.spinner("Generating response..."):
-        initial_response = ai.ask_gemini(file_result)
-        firebox_response = ai.refine_response(initial_response) if refine_response_enabled else initial_response
-
-    with st.chat_message("assistant"):
-        st.markdown(firebox_response)
-
-    st.session_state.messages.append({"role": "user", "content": file_result})
-    st.session_state.messages.append({"role": "assistant", "content": firebox_response})
-
-elif query:
+if query:
     with st.chat_message("user"):
         st.markdown(query)
 
     with st.spinner("Generating response..."):
-        initial_response = ai.ask_gemini(query)
-        firebox_response = ai.refine_response(initial_response) if refine_response_enabled else initial_response
+        firebox_response = ai.ask_gemini(query, memory_depth)
 
     with st.chat_message("assistant"):
         st.markdown(firebox_response)
+        ai.speak_response(firebox_response)
 
     st.session_state.messages.append({"role": "user", "content": query})
     st.session_state.messages.append({"role": "assistant", "content": firebox_response})
