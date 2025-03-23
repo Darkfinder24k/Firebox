@@ -2,21 +2,20 @@ import streamlit as st
 import google.generativeai as genai
 import time
 
-# 🔒 Secure API Key Handling (Use ENV Variables in Production)
-API_KEY = "AIzaSyD9hmqBaXvZqAUxQ3mnejzM_EwPMeZQod4"
-genai.configure(api_key=API_KEY)
+# Secure API Key Handling
+genai.configure(api_key="AIzaSyD9hmqBaXvZqAUxQ3mnejzM_EwPMeZQod4")
 
-# 🔑 User Subscription Database (Demo - Replace with Firebase/Database)
-premium_users = {"kushagra@gmail.com", "premium_user@example.com"}  
+# User Subscription Database (Demo - Replace with Firebase/Database)
+premium_users = {"kushagra@gmail.com", "premium_user@example.com"}  # Add premium users here
 
-# ⚙️ Streamlit Page Configuration
+# Streamlit Page Config (Must be the first command)
 st.set_page_config(page_title="Firebox AI", layout="wide")
 
-# 🔐 User Authentication
+# User Authentication
 user_email = st.sidebar.text_input("Enter your Email:")
 is_premium = user_email in premium_users
 
-# 🧠 AI Model Selection
+# AI Model Selection
 class FireboxAI:
     def __init__(self, is_premium, max_tokens=2048):
         model_name = "gemini-2.0-flash" if is_premium else "gemini-1.5-pro"
@@ -26,21 +25,21 @@ class FireboxAI:
         try:
             response = self.model.generate_content(prompt)
             return response.text if response else "Error: No response."
-        except Exception as e:
-            return f"Error: {str(e)}"
+        except Exception:
+            return "Error: Firebox AI encountered an issue. Please try again later."
 
-# 🔥 Initialize Firebox AI
+# Initialize Firebox AI
 ai = FireboxAI(is_premium)
 
-# 🎉 Firebox Premium Promotion Popup (Shows on Page Load)
+# Firebox Premium Promotion Popup (Shows on Page Load)
 if "show_premium_popup" not in st.session_state:
     st.session_state.show_premium_popup = True
 
 if st.session_state.show_premium_popup:
-    st.warning("🔥 Upgrade to Firebox Premium for ultra-fast responses, premium UI, and enhanced features!")
+    st.warning("🔥 Upgrade to Firebox Premium for ultra-fast responses, premium UI, and more features!")
     st.session_state.show_premium_popup = False
 
-# 🎨 UI Differences for Premium Users
+# UI Differences for Premium Users
 if is_premium:
     st.sidebar.title("🔥 Firebox AI - Very Pro Premium")
     st.title("🚀 Firebox AI Premium Assistant")
@@ -48,14 +47,13 @@ else:
     st.sidebar.title("🔥 Firebox AI - Free")
     st.title("Firebox AI Assistant")
 
-# 📌 Memory Slider
+# Memory Slider
 memory_depth = st.sidebar.slider("Memory Depth", min_value=1, max_value=10, value=5)
 
-# 🔄 Ensure Chat History Exists
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# 📝 Text Input Query
+# Text Input Query
 txt_query = st.chat_input("Ask Firebox AI...")
 if txt_query:
     with st.chat_message("user"):
@@ -69,20 +67,19 @@ if txt_query:
     st.session_state.messages.append({"role": "user", "content": txt_query})
     st.session_state.messages.append({"role": "assistant", "content": firebox_response})
 
-# 🗂️ Display Chat History
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# 🔔 Show Firebox Premium Promotion Every 3 Minutes
+# Show Firebox Premium Promotion Every 3 Minutes
 if "last_premium_prompt" not in st.session_state:
     st.session_state.last_premium_prompt = time.time()
 
 if time.time() - st.session_state.last_premium_prompt > 180:
-    st.sidebar.warning("🔥 Upgrade to Firebox Premium for ultra-fast responses, premium UI, and enhanced features!")
+    st.sidebar.warning("🔥 Upgrade to Firebox Premium for ultra-fast responses, premium UI, and more features!")
     st.session_state.last_premium_prompt = time.time()
 
-# 🚫 Hide Streamlit Branding
+# Hide Streamlit Branding, Fork Button, and Footer
 hide_streamlit_style = """
     <style>
         #MainMenu {visibility: hidden;}
