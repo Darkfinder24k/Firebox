@@ -3,6 +3,9 @@ import google.generativeai as genai
 from PIL import Image
 import time
 
+# Set page config FIRST
+st.set_page_config(page_title="Firebox AI", layout="wide")
+
 # Secure API Key Handling
 genai.configure(api_key="AIzaSyD9hmqBaXvZqAUxQ3mnejzM_EwPMeZQod4")
 
@@ -19,16 +22,10 @@ class FireboxAI:
         model_name = "gemini-pro" if is_premium else "gemini-2.0-flash"
         self.model = genai.GenerativeModel(model_name, generation_config={"max_output_tokens": max_tokens})
 
-    def ask_firebox(self, prompt, refine_times=0):
+    def ask_firebox(self, prompt):
         try:
             response = self.model.generate_content(prompt)
             output = response.text if response else "Error: No response."
-            
-            if is_premium:
-                for _ in range(refine_times):  # Refining for premium users
-                    response = self.model.generate_content(output)
-                    output = response.text if response else output
-            
             return output
         except Exception as e:
             st.error(f"Error: Firebox AI encountered an issue - {str(e)}")
@@ -38,7 +35,6 @@ class FireboxAI:
 ai = FireboxAI(is_premium)
 
 # Streamlit UI
-st.set_page_config(page_title="Firebox AI", layout="wide")
 st.sidebar.title("🔥 Firebox AI - Very Pro Premium" if is_premium else "🔥 Firebox AI - Free")
 st.title("Firebox AI Assistant")
 
@@ -48,49 +44,14 @@ memory_depth = st.sidebar.slider("Memory Depth", min_value=1, max_value=10, valu
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-if is_premium:
-    if st.sidebar.button("🎙️ Use Voice Input"):
-        import speech_recognition as sr
-        def recognize_speech():
-            recognizer = sr.Recognizer()
-            with sr.Microphone() as source:
-                st.write("🎤 Listening... Speak now")
-                recognizer.adjust_for_ambient_noise(source)
-                try:
-                    audio = recognizer.listen(source, timeout=5)
-                    text = recognizer.recognize_google(audio)
-                    st.write(f"🗣️ You said: {text}")
-                    return text
-                except sr.UnknownValueError:
-                    st.warning("Sorry, I couldn't understand that.")
-                    return None
-                except sr.RequestError:
-                    st.error("Error with speech recognition service.")
-                    return None
-        
-        speech_text = recognize_speech()
-        if speech_text:
-            with st.chat_message("user"):
-                st.markdown(speech_text)
-
-            with st.spinner("Generating response..."):
-                firebox_response = ai.ask_firebox(speech_text, refine_times=10)
-                time.sleep(3)  # Simulating slower response generation for free users
-
-            with st.chat_message("assistant"):
-                st.markdown(firebox_response)
-
-            st.session_state.messages.append({"role": "user", "content": speech_text})
-            st.session_state.messages.append({"role": "assistant", "content": firebox_response})
-
 query = st.chat_input("Ask Firebox AI...")
 if query:
     with st.chat_message("user"):
         st.markdown(query)
 
     with st.spinner("Generating response..."):
-        firebox_response = ai.ask_firebox(query, refine_times=10 if is_premium else 0)
-        time.sleep(3)  # Simulating slower response generation for free users
+        firebox_response = ai.ask_firebox(query)
+        time.sleep(3 if not is_premium else 0)  # Simulate slow response for free users
 
     with st.chat_message("assistant"):
         st.markdown(firebox_response)
