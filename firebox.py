@@ -1,13 +1,7 @@
 import streamlit as st
 import google.generativeai as genai
 import speech_recognition as sr
-import pyttsx3
 from PIL import Image
-
-# Initialize TTS Engine
-engine = pyttsx3.init()
-engine.setProperty("rate", 150)  # Speech speed
-engine.setProperty("volume", 1.0)  # Volume level
 
 # Secure API Key Handling
 GEMINI_API_KEY = "AIzaSyD9hmqBaXvZqAUxQ3mnejzM_EwPMeZQod4"
@@ -37,10 +31,6 @@ class FireboxAI:
         except Exception as e:
             st.error(f"Error: Firebox AI encountered an issue - {str(e)}")
             return "An error occurred. Please try again later."
-
-    def speak_response(self, text):
-        engine.say(text)
-        engine.runAndWait()
 
 # Initialize Firebox AI
 ai = FireboxAI(is_premium)
@@ -82,7 +72,6 @@ if st.sidebar.button("🎙️ Use Voice Input"):
 
         with st.chat_message("assistant"):
             st.markdown(firebox_response)
-            ai.speak_response(firebox_response)
 
         st.session_state.messages.append({"role": "user", "content": speech_text})
         st.session_state.messages.append({"role": "assistant", "content": firebox_response})
@@ -97,7 +86,6 @@ if query:
 
     with st.chat_message("assistant"):
         st.markdown(firebox_response)
-        ai.speak_response(firebox_response)
 
     st.session_state.messages.append({"role": "user", "content": query})
     st.session_state.messages.append({"role": "assistant", "content": firebox_response})
