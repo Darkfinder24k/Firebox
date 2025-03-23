@@ -2,6 +2,7 @@ import streamlit as st
 import google.generativeai as genai
 from PIL import Image
 import time
+import speech_recognition as sr
 
 # Secure API Key Handling
 genai.configure(api_key="AIzaSyD9hmqBaXvZqAUxQ3mnejzM_EwPMeZQod4")
@@ -22,17 +23,10 @@ class FireboxAI:
         model_name = "gemini-pro" if is_premium else "gemini-2.0-flash"
         self.model = genai.GenerativeModel(model_name, generation_config={"max_output_tokens": max_tokens})
 
-    def ask_firebox(self, prompt, refine_times=0):
+    def ask_firebox(self, prompt):
         try:
             response = self.model.generate_content(prompt)
-            output = response.text if response else "Error: No response."
-            
-            if is_premium:
-                for _ in range(refine_times):  # Refining for premium users
-                    response = self.model.generate_content(output)
-                    output = response.text if response else output
-            
-            return output
+            return response.text if response else "Error: No response."
         except Exception as e:
             st.error(f"Error: Firebox AI encountered an issue - {str(e)}")
             return "An error occurred. Please try again later."
@@ -65,7 +59,6 @@ if "messages" not in st.session_state:
 # Speech Recognition (Only for Premium Users)
 if is_premium:
     if st.sidebar.button("🎙️ Use Voice Input"):
-        import speech_recognition as sr
         def recognize_speech():
             recognizer = sr.Recognizer()
             with sr.Microphone() as source:
@@ -89,7 +82,7 @@ if is_premium:
                 st.markdown(speech_text)
 
             with st.spinner("Generating response..."):
-                firebox_response = ai.ask_firebox(speech_text, refine_times=10)
+                firebox_response = ai.ask_firebox(speech_text)
             
             with st.chat_message("assistant"):
                 st.markdown(firebox_response)
@@ -104,7 +97,7 @@ if txt_query:
         st.markdown(txt_query)
 
     with st.spinner("Generating response..."):
-        firebox_response = ai.ask_firebox(txt_query, refine_times=10 if is_premium else 0)
+        firebox_response = ai.ask_firebox(txt_query)
         if not is_premium:
             time.sleep(3)  # Simulating slower response generation for free users
 
