@@ -1,6 +1,5 @@
 import streamlit as st
 import google.generativeai as genai
-import speech_recognition as sr
 from PIL import Image
 import time
 
@@ -43,45 +42,46 @@ st.set_page_config(page_title="Firebox AI", layout="wide")
 st.sidebar.title("🔥 Firebox AI - Very Pro Premium" if is_premium else "🔥 Firebox AI - Free")
 st.title("Firebox AI Assistant")
 
-# Speech Recognition
-def recognize_speech():
-    recognizer = sr.Recognizer()
-    with sr.Microphone() as source:
-        st.write("🎤 Listening... Speak now")
-        recognizer.adjust_for_ambient_noise(source)
-        try:
-            audio = recognizer.listen(source, timeout=5)
-            text = recognizer.recognize_google(audio)
-            st.write(f"🗣️ You said: {text}")
-            return text
-        except sr.UnknownValueError:
-            st.warning("Sorry, I couldn't understand that.")
-            return None
-        except sr.RequestError:
-            st.error("Error with speech recognition service.")
-            return None
-
 # Memory Slider
 memory_depth = st.sidebar.slider("Memory Depth", min_value=1, max_value=10, value=5)
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-if st.sidebar.button("🎙️ Use Voice Input"):
-    speech_text = recognize_speech()
-    if speech_text:
-        with st.chat_message("user"):
-            st.markdown(speech_text)
+if is_premium:
+    if st.sidebar.button("🎙️ Use Voice Input"):
+        import speech_recognition as sr
+        def recognize_speech():
+            recognizer = sr.Recognizer()
+            with sr.Microphone() as source:
+                st.write("🎤 Listening... Speak now")
+                recognizer.adjust_for_ambient_noise(source)
+                try:
+                    audio = recognizer.listen(source, timeout=5)
+                    text = recognizer.recognize_google(audio)
+                    st.write(f"🗣️ You said: {text}")
+                    return text
+                except sr.UnknownValueError:
+                    st.warning("Sorry, I couldn't understand that.")
+                    return None
+                except sr.RequestError:
+                    st.error("Error with speech recognition service.")
+                    return None
+        
+        speech_text = recognize_speech()
+        if speech_text:
+            with st.chat_message("user"):
+                st.markdown(speech_text)
 
-        with st.spinner("Generating response..."):
-            firebox_response = ai.ask_firebox(speech_text, refine_times=10 if is_premium else 0)
-            time.sleep(3)  # Simulating slower response generation for free users
+            with st.spinner("Generating response..."):
+                firebox_response = ai.ask_firebox(speech_text, refine_times=10)
+                time.sleep(3)  # Simulating slower response generation for free users
 
-        with st.chat_message("assistant"):
-            st.markdown(firebox_response)
+            with st.chat_message("assistant"):
+                st.markdown(firebox_response)
 
-        st.session_state.messages.append({"role": "user", "content": speech_text})
-        st.session_state.messages.append({"role": "assistant", "content": firebox_response})
+            st.session_state.messages.append({"role": "user", "content": speech_text})
+            st.session_state.messages.append({"role": "assistant", "content": firebox_response})
 
 query = st.chat_input("Ask Firebox AI...")
 if query:
@@ -101,3 +101,11 @@ if query:
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
+
+# Show Firebox Premium Promotion Every 3 Minutes
+if "last_premium_prompt" not in st.session_state:
+    st.session_state.last_premium_prompt = time.time()
+
+if time.time() - st.session_state.last_premium_prompt > 180:
+    st.sidebar.warning("🔥 Upgrade to Firebox Premium for ultra-fast responses, premium UI, and voice support!")
+    st.session_state.last_premium_prompt = time.time()
