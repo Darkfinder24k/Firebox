@@ -1,15 +1,14 @@
 import streamlit as st
 import google.generativeai as genai
-from PIL import Image
 import time
 import speech_recognition as sr
 
 # 🔒 Secure API Key Handling (Move to ENV Variables in Production)
-API_KEY = "AIzaSyD9hmqBaXvZqAUxQ3mnejzM_EwPMeZQod4"
+API_KEY = "AIzaSyD9hmqBaXvZqAUxQ3mnejzM_EwPMeZQod4" # Replace with your actual API key
 genai.configure(api_key=API_KEY)
 
 # 🔑 User Subscription Database (Demo - Replace with Firebase/Database)
-premium_users = {"kushagra@gmail.com", "premium_user@example.com"}  
+premium_users = {"kushagra@gmail.com", "premium_user@example.com"}
 
 # ⚙️ Streamlit Page Configuration
 st.set_page_config(page_title="Firebox AI", layout="wide")
@@ -21,15 +20,15 @@ is_premium = user_email in premium_users
 # 🧠 AI Model Selection
 class FireboxAI:
     def __init__(self, is_premium, max_tokens=2048):
-        model_name = "gemini-2.0-flash" if is_premium else "gemini-1.5-pro"
+        model_name = "gemini-pro" if not is_premium else "gemini-pro" #modified to gemini-pro for both cases. flash is not supported currently.
         self.model = genai.GenerativeModel(model_name, generation_config={"max_output_tokens": max_tokens})
 
     def ask_firebox(self, prompt):
         try:
             response = self.model.generate_content(prompt)
-            return response.text if response else "Error: No response."
-        except Exception:
-            return "Error: Firebox AI encountered an issue. Please try again later."
+            return response.text if response and response.text else "Error: No response."
+        except Exception as e:
+            return f"Error: Firebox AI encountered an issue. Please try again later. {e}"
 
 # 🔥 Initialize Firebox AI
 ai = FireboxAI(is_premium)
@@ -74,6 +73,9 @@ if is_premium:
                     return None
                 except sr.RequestError:
                     st.error("Error with speech recognition service.")
+                    return None
+                except Exception as e:
+                    st.error(f"An error occurred during speech recognition: {e}")
                     return None
 
         speech_text = recognize_speech()
