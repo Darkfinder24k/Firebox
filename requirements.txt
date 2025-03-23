@@ -4,3 +4,4 @@ SpeechRecognition
 pyttsx3
 Pillow
 pyaudio
+io
