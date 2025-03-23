@@ -3,18 +3,21 @@ import google.generativeai as genai
 import speech_recognition as sr
 from PIL import Image
 
-# Secure API Key Handling
+# ✅ Set Page Configuration (MUST BE FIRST)
+st.set_page_config(page_title="Firebox AI", layout="wide")
+
+# ✅ Secure API Key Handling
 GEMINI_API_KEY = "AIzaSyD9hmqBaXvZqAUxQ3mnejzM_EwPMeZQod4"
 genai.configure(api_key=GEMINI_API_KEY)
 
-# User Subscription Database (Demo - Replace with Firebase/Database)
-premium_users = {"kushagra@gmail.com", "premium_user@example.com"}  # Add premium users here
+# ✅ User Subscription Database (Demo - Replace with Firebase/Database)
+premium_users = {"kushagra@gmail.com", "premium_user@example.com"}
 
-# User Authentication
+# ✅ User Authentication
 user_email = st.sidebar.text_input("Enter your Email:")
 is_premium = user_email in premium_users
 
-# AI Model Selection (Different for Free vs Premium)
+# ✅ AI Model Selection (Free vs Premium)
 class FireboxAI:
     def __init__(self, is_premium, max_tokens=2048):
         model_name = "gemini-pro" if is_premium else "gemini-2.0-flash"
@@ -32,17 +35,13 @@ class FireboxAI:
             st.error(f"Error: Firebox AI encountered an issue - {str(e)}")
             return "An error occurred. Please try again later."
 
-# Initialize Firebox AI
+# ✅ Initialize Firebox AI
 ai = FireboxAI(is_premium)
 
-# Initialize session state for chat history
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-# Memory Slider
+# ✅ Memory Slider
 memory_depth = st.sidebar.slider("Memory Depth", min_value=1, max_value=10, value=5)
 
-# Speech Recognition
+# ✅ Speech Recognition
 def recognize_speech():
     recognizer = sr.Recognizer()
     with sr.Microphone() as source:
@@ -60,8 +59,7 @@ def recognize_speech():
             st.error("Error with speech recognition service.")
             return None
 
-# Streamlit UI
-st.set_page_config(page_title="Firebox AI", layout="wide")
+# ✅ Streamlit UI
 st.sidebar.title("🔥 Firebox AI - Premium" if is_premium else "🔥 Firebox AI - Free")
 st.title("Firebox AI Assistant")
 
