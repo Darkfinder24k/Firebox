@@ -7,3 +7,4 @@ pyaudio
 io
 sys
 traceback
+logging
