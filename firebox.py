@@ -54,6 +54,7 @@ def process_image(uploaded_file):
     image = Image.open(uploaded_file)
     # Basic example: convert to grayscale
     gray_image = image.convert('L')
+    # Optionally save the image or do more processing here if required.
     return "Image processed."
 
 # File Upload Handler (No Video)
