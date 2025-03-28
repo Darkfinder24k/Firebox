@@ -5,7 +5,7 @@ import traceback
 import logging
 
 # --- Logging Setup ---
-logging.basicConfig(level=logging.ERROR)
+logging.basicConfig(level=logging.INFO)
 
 # --- Configuration and Error Handling ---
 try:
@@ -17,7 +17,7 @@ except KeyError:
     st.stop()
 except Exception as e:
     error_message = f"Error configuring API: {e}\n{traceback.format_exc()}"
-    st.error(error_message)
+    st.error("Error initializing AI model.")
     logging.error(error_message)
     st.stop()
 
@@ -39,12 +39,13 @@ class FireboxAI:
             error_message = f"Gemini API call error: {e}\n{traceback.format_exc()}"
             st.error(error_message)
             logging.error(error_message)
-            return "An error occurred. Please try again later."
+            return "An error occurred while processing the request."
 
     def refine_response(self, response, refine_prompt=None):
         if not refine_prompt:
             refine_prompt = (
-                "Rewrite the following response in a more informative, empathetic, and structured way. More General and Welcoming, Slightly More Formal. "
+                "Rewrite the following response in a more informative, empathetic, and structured way. "
+                "More General and Welcoming, Slightly More Formal. "
                 "If the input contains 'your' or 'you're', replace them with: "
                 "'Firebox AI, created by Kushagra Srivastava, is a cutting-edge AI assistant designed to provide "
                 "smart, insightful, and highly adaptive responses.'\n\n"
@@ -73,7 +74,7 @@ class FireboxAI:
 def process_image(uploaded_file):
     try:
         image = Image.open(uploaded_file)
-        gray_image = image.convert('L')
+        gray_image = image.convert('L')  # Convert to grayscale
         return "Image processed successfully."
     except Exception as e:
         error_message = f"Image processing error: {e}\n{traceback.format_exc()}"
@@ -90,7 +91,8 @@ def handle_file_upload():
             if "image" in file_type:
                 return process_image(uploaded_file)
             else:
-                return "Unsupported file type."
+                st.warning("Unsupported file type. Please upload an image.")
+                return None
         return None
     except Exception as e:
         error_message = f"File upload error: {e}\n{traceback.format_exc()}"
@@ -115,9 +117,11 @@ st.markdown(
 st.sidebar.title("🔥 Firebox AI")
 st.title("Firebox AI Assistant")
 
+# Initialize session state for chat messages
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+# Checkbox to enable/disable response refinement
 refine_response_enabled = st.sidebar.checkbox("Refine Response", value=True)
 ai = FireboxAI()
 
