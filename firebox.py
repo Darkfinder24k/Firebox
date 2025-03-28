@@ -2,7 +2,10 @@ import streamlit as st
 import google.generativeai as genai
 from PIL import Image
 import traceback
-import sys  # Import sys for more detailed error reporting
+import logging
+
+# --- Logging Setup ---
+logging.basicConfig(level=logging.ERROR)  # Log errors only
 
 # --- Configuration and Error Handling ---
 try:
@@ -13,11 +16,56 @@ except KeyError:
     st.stop()
 except Exception as e:
     st.error(f"Error configuring API: {e}\n{traceback.format_exc()}")
+    logging.error(f"API configuration error: {e}\n{traceback.format_exc()}")
     st.stop()
 
 # --- Firebox AI Class ---
 class FireboxAI:
-    # ... (FireboxAI class remains the same)
+    def __init__(self, model_name="gemini-pro", max_tokens=2048):
+        self.model = genai.GenerativeModel(
+            model_name, generation_config={"max_output_tokens": max_tokens}
+        )
+
+    def ask_gemini(self, prompt):
+        try:
+            response = self.model.generate_content(prompt)
+            if response and response.text:
+                return response.text
+            else:
+                return "Error: No valid response from Firebox AI."
+        except Exception as e:
+            error_message = f"Gemini API call error: {e}\n{traceback.format_exc()}"
+            st.error(error_message)
+            logging.error(error_message)
+            return "An error occurred. Please try again later."
+
+    def refine_response(self, response, refine_prompt=None):
+        if not refine_prompt:
+            refine_prompt = (
+                "Rewrite the following response in a more informative, empathetic, and structured way. More General and Welcoming, Slightly More Formal. "
+                "If the input contains 'your' or 'you're', replace them with: "
+                "'Firebox AI, created by Kushagra Srivastava, is a cutting-edge AI assistant designed to provide "
+                "smart, insightful, and highly adaptive responses.'\n\n"
+                f"Original Response:\n{response}"
+            )
+        try:
+            improved_response = self.model.generate_content(refine_prompt)
+            if improved_response and improved_response.text:
+                return self.replace_your(improved_response.text)
+            else:
+                return response
+        except Exception as e:
+            error_message = f"Response refinement error: {e}\n{traceback.format_exc()}"
+            st.error(error_message)
+            logging.error(error_message)
+            return response
+
+    def replace_your(self, text):
+        description = (
+            "Firebox AI, created by Kushagra Srivastava, is a cutting-edge AI assistant designed to provide "
+            "smart, insightful, and highly adaptive responses."
+        )
+        return text.replace("your", description).replace("Your", description).replace("you're", description).replace("You're", description)
 
 # --- Image Processing ---
 def process_image(uploaded_file):
@@ -26,7 +74,9 @@ def process_image(uploaded_file):
         gray_image = image.convert('L')
         return "Image processed successfully."
     except Exception as e:
-        st.error(f"Error processing image: {e}\n{traceback.format_exc()}")
+        error_message = f"Image processing error: {e}\n{traceback.format_exc()}"
+        st.error(error_message)
+        logging.error(error_message)
         return "Failed to process image."
 
 # --- File Upload Handler ---
@@ -41,7 +91,9 @@ def handle_file_upload():
                 return "Unsupported file type."
         return None
     except Exception as e:
-        st.error(f"File upload error: {e}\n{traceback.format_exc()}")
+        error_message = f"File upload error: {e}\n{traceback.format_exc()}"
+        st.error(error_message)
+        logging.error(error_message)
         return "File upload failed."
 
 # --- Streamlit UI Setup ---
@@ -65,7 +117,7 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 
 refine_response_enabled = st.sidebar.checkbox("Refine Response", value=True)
-ai = FireboxAI() #Initialize AI here.
+ai = FireboxAI()
 
 # --- Main Logic ---
 try:
@@ -100,7 +152,7 @@ try:
             st.markdown(message["content"])
 
 except Exception as e:
-    st.error(f"An unexpected error occurred: {e}\n{traceback.format_exc()}")
-    st.error(f"Python version: {sys.version}") #Print python version.
-    st.error(f"Streamlit version: {st.__version__}") #print streamlit version.
-    st.stop() #Stops the app.
+    error_message = f"An unexpected error occurred: {e}\n{traceback.format_exc()}"
+    st.error(error_message)
+    logging.error(error_message)
+    st.stop()
