@@ -2,8 +2,8 @@ import streamlit as st
 import google.generativeai as genai
 from PIL import Image
 
-# Secure API Key Handling using secrets.toml
-GEMINI_API_KEY = "AIzaSyD9hmqBaXvZqAUxQ3mnejzM_EwPMeZQod4"
+# Fetch the API Key securely from secrets.toml
+GEMINI_API_KEY = st.secrets["google"]["GEMINI_API_KEY"]  # Fetch API key securely
 genai.configure(api_key=GEMINI_API_KEY)
 
 class FireboxAI:
@@ -51,11 +51,15 @@ ai = FireboxAI()
 
 # Image Processing
 def process_image(uploaded_file):
-    image = Image.open(uploaded_file)
-    # Basic example: convert to grayscale
-    gray_image = image.convert('L')
-    # Optionally save the image or do more processing here if required.
-    return "Image processed."
+    try:
+        image = Image.open(uploaded_file)
+        # Basic example: convert to grayscale
+        gray_image = image.convert('L')
+        # Save or return something here if needed
+        return "Image processed successfully."
+    except Exception as e:
+        st.error(f"Error processing image: {e}")
+        return "Failed to process image."
 
 # File Upload Handler (No Video)
 def handle_file_upload():
@@ -68,10 +72,10 @@ def handle_file_upload():
             return "Unsupported file type"
     return None
 
-# Streamlit UI
+# Streamlit UI Setup
 st.set_page_config(page_title="Firebox AI", layout="wide")
 
-# Updated CSS with !important
+# Updated CSS with !important to hide elements
 st.markdown(
     """
     <style>
@@ -92,15 +96,18 @@ st.markdown(
 st.sidebar.title("🔥 Firebox AI")
 st.title("Firebox AI Assistant")
 
+# Initialize session state for storing messages
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+# Refine response setting
 refine_response_enabled = st.sidebar.checkbox("Refine Response", value=True)
 
-# Main input handling
+# Main input handling (Image or Text Query)
 file_result = handle_file_upload()
 query = st.chat_input("Ask Firebox AI...")
 
+# Handling file upload responses
 if file_result:
     with st.chat_message("user"):
         st.markdown(file_result)
@@ -112,9 +119,11 @@ if file_result:
     with st.chat_message("assistant"):
         st.markdown(firebox_response)
 
+    # Store the session messages
     st.session_state.messages.append({"role": "user", "content": file_result})
     st.session_state.messages.append({"role": "assistant", "content": firebox_response})
 
+# Handling text query responses
 elif query:
     with st.chat_message("user"):
         st.markdown(query)
@@ -126,9 +135,11 @@ elif query:
     with st.chat_message("assistant"):
         st.markdown(firebox_response)
 
+    # Store the session messages
     st.session_state.messages.append({"role": "user", "content": query})
     st.session_state.messages.append({"role": "assistant", "content": firebox_response})
 
+# Displaying previous messages
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
