@@ -9,7 +9,7 @@ logging.basicConfig(level=logging.INFO)
 
 # --- Configuration and Error Handling ---
 try:
-    GEMINI_API_KEY = st.secrets["google"]["GEMINI_API_KEY"]
+    GEMINI_API_KEY = "AIzaSyD9hmqBaXvZqAUxQ3mnejzM_EwPMeZQod4"
     genai.configure(api_key=GEMINI_API_KEY)
 except KeyError:
     st.error("API key not found in secrets.toml. Please ensure it is correctly configured.")
