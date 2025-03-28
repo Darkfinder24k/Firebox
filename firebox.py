@@ -5,7 +5,7 @@ import traceback
 import logging
 
 # --- Logging Setup ---
-logging.basicConfig(level=logging.ERROR)  # Log errors only
+logging.basicConfig(level=logging.ERROR)
 
 # --- Configuration and Error Handling ---
 try:
@@ -13,10 +13,12 @@ try:
     genai.configure(api_key=GEMINI_API_KEY)
 except KeyError:
     st.error("API key not found in secrets.toml. Please ensure it is correctly configured.")
+    logging.error("API key not found in secrets.toml.")
     st.stop()
 except Exception as e:
-    st.error(f"Error configuring API: {e}\n{traceback.format_exc()}")
-    logging.error(f"API configuration error: {e}\n{traceback.format_exc()}")
+    error_message = f"Error configuring API: {e}\n{traceback.format_exc()}"
+    st.error(error_message)
+    logging.error(error_message)
     st.stop()
 
 # --- Firebox AI Class ---
