@@ -5,3 +5,5 @@ pyttsx3
 Pillow
 pyaudio
 io
+sys
+traceback
