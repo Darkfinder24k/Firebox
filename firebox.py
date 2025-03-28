@@ -3,11 +3,15 @@ import google.generativeai as genai
 from PIL import Image
 
 # Fetch the API Key securely from secrets.toml
-GEMINI_API_KEY = st.secrets["google"]["GEMINI_API_KEY"]  # Fetch API key securely
-genai.configure(api_key=GEMINI_API_KEY)
+try:
+    GEMINI_API_KEY = st.secrets["google"]["GEMINI_API_KEY"]  # Fetch API key securely
+    genai.configure(api_key=GEMINI_API_KEY)
+except KeyError:
+    st.error("API key not found in secrets.toml. Please ensure it is correctly configured.")
+    st.stop()  # Stop execution if API key is missing
 
 class FireboxAI:
-    def __init__(self, model_name="gemini-2.0-flash", max_tokens=2048):
+    def __init__(self, model_name="gemini-pro", max_tokens=2048):  # corrected model name
         self.model = genai.GenerativeModel(
             model_name, generation_config={"max_output_tokens": max_tokens}
         )
@@ -15,7 +19,7 @@ class FireboxAI:
     def ask_gemini(self, prompt):
         try:
             response = self.model.generate_content(prompt)
-            return response.text if response else "Error: No response from Firebox AI."
+            return response.text if response and response.text else "Error: No response from Firebox AI."
         except Exception as e:
             st.error(f"Error: Firebox AI encountered an issue - {str(e)}")
             return "An error occurred. Please try again later."
@@ -55,7 +59,6 @@ def process_image(uploaded_file):
         image = Image.open(uploaded_file)
         # Basic example: convert to grayscale
         gray_image = image.convert('L')
-        # Save or return something here if needed
         return "Image processed successfully."
     except Exception as e:
         st.error(f"Error processing image: {e}")
